@@ -1,0 +1,28 @@
+name: Send Study Reminders
+
+on:
+  schedule:
+    - cron: '*/15 * * * *'   # كل 15 دقيقة — أوقات GitHub الشغل ممكن يتأخر بضع دقايق وقت الزحمة، ده طبيعي
+  workflow_dispatch: {}       # يسمح لك بتشغيله يدويًا من تبويب Actions لو حابب تجرب فورًا
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        working-directory: reminder-cron
+        run: npm install
+
+      - name: Send reminders
+        working-directory: reminder-cron
+        run: npm run send
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}

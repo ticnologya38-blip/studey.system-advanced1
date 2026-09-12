@@ -1,0 +1,1380 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>لوحة الأدمن — إدارة الاشتراكات والمستخدمين</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0b1326; --sf:#131b2e; --sf2:#171f33; --tx:#dae2fd; --tx2:#b9cacb; --tx3:#5a6b78;
+    --bd:#222a3d; --ac:#00f2fe; --pu:#9695ff; --gn:#1ec87a; --am:#f5a41f; --rd:#e85050;
+    --font:'Cairo',sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--bg);color:var(--tx);font-family:var(--font);min-height:100vh;}
+  .wrap{max-width:1100px;margin:0 auto;padding:24px 16px 60px;}
+  h1{font-size:18px;font-weight:800;margin-bottom:4px;}
+  .sub{font-size:12px;color:var(--tx3);margin-bottom:24px;}
+  .card{background:var(--sf);border:1px solid var(--bd);border-radius:14px;padding:18px;margin-bottom:20px;box-shadow:0 0 0 1px rgba(0,242,254,.08),0 0 24px -12px rgba(0,242,254,.3);}
+  .g4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:22px;}
+  @media(max-width:700px){.g4{grid-template-columns:repeat(2,1fr);}}
+  .met{background:var(--sf);border:1px solid var(--bd);border-radius:12px;padding:14px;text-align:center;}
+  .met-v{font-size:22px;font-weight:800;}
+  .met-l{font-size:11px;color:var(--tx3);margin-top:4px;}
+  table{width:100%;border-collapse:collapse;font-size:12.5px;}
+  th{text-align:right;color:var(--tx3);font-weight:600;padding:8px 6px;border-bottom:1px solid var(--bd);white-space:nowrap;}
+  td{padding:9px 6px;border-bottom:1px solid rgba(255,255,255,.05);vertical-align:middle;}
+  .tbl-wrap{overflow-x:auto;}
+  .badge{display:inline-block;padding:2px 9px;border-radius:20px;font-size:10.5px;font-weight:700;}
+  .badge.free{background:rgba(136,146,171,.15);color:var(--tx2);}
+  .badge.paid{background:rgba(30,200,122,.15);color:var(--gn);}
+  .badge.pending{background:rgba(245,164,31,.15);color:var(--am);}
+  .badge.rejected{background:rgba(232,80,80,.15);color:var(--rd);}
+  .btn{border:none;border-radius:8px;padding:6px 12px;font-size:11.5px;font-weight:700;cursor:pointer;font-family:var(--font);}
+  .btn-ok{background:var(--gn);color:#04150c;}
+  .btn-no{background:var(--rd);color:#fff;}
+  .btn-mini{margin-left:4px;}
+  .vf{color:var(--gn);font-weight:800;direction:ltr;display:inline-block;}
+  /* login screen */
+  #loginScreen{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:var(--bg);z-index:99;}
+  .login-box{width:100%;max-width:340px;background:var(--sf);border:1px solid var(--bd);border-radius:16px;padding:26px;}
+  .login-box h2{font-size:15px;margin-bottom:16px;text-align:center;}
+  .field{margin-bottom:12px;}
+  .field label{display:block;font-size:11px;color:var(--tx2);margin-bottom:5px;}
+  .field input{width:100%;background:var(--sf2);border:1px solid var(--bd);border-radius:9px;padding:10px;color:var(--tx);font-size:13px;font-family:var(--font);}
+  .field input:focus{outline:none;border-color:var(--ac);}
+  .err{background:rgba(232,80,80,.12);color:var(--rd);font-size:11px;padding:8px 10px;border-radius:8px;margin-bottom:10px;display:none;}
+  .err.show{display:block;}
+  .submit{width:100%;background:linear-gradient(135deg,var(--ac),var(--pu));color:#fff;border:none;border-radius:10px;padding:11px;font-weight:700;font-size:13px;cursor:pointer;margin-top:4px;}
+  #appScreen{display:none;}
+  .top-bar{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
+  .logout-btn{background:none;border:1px solid var(--bd);color:var(--tx2);border-radius:8px;padding:7px 12px;font-size:11.5px;cursor:pointer;}
+  .empty{text-align:center;color:var(--tx3);font-size:12px;padding:20px;}
+  .sec-title{font-weight:800;font-size:14px;margin-bottom:14px;display:flex;align-items:center;gap:6px;}
+  .btn-pu{background:var(--pu);color:#fff;}
+  /* Student data editor modal */
+  .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;display:none;align-items:flex-start;justify-content:center;overflow-y:auto;padding:30px 12px;}
+  .modal-bg.show{display:flex;}
+  .modal-box{background:var(--sf);border:1px solid var(--bd);border-radius:14px;padding:20px;max-width:720px;width:100%;margin-bottom:40px;}
+  .modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
+  .modal-head h3{font-size:15px;}
+  .modal-close{background:none;border:1px solid var(--bd);color:var(--tx2);border-radius:8px;padding:6px 10px;cursor:pointer;font-size:16px;line-height:1;}
+  .prof-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;}
+  .prof-grid label{display:block;font-size:11px;color:var(--tx2);margin-bottom:4px;}
+  .prof-grid input,.prof-grid select,.field select{width:100%;background:var(--sf2);border:1px solid var(--bd);border-radius:8px;padding:8px;color:var(--tx);font-size:12.5px;font-family:var(--font);}
+  .subj-block{border:1px solid var(--bd);border-radius:10px;padding:12px;margin-bottom:12px;}
+  .subj-head{font-weight:800;font-size:13px;margin-bottom:8px;display:flex;align-items:center;gap:6px;}
+  .ch-row{display:grid;grid-template-columns:1fr 130px 110px 30px;gap:6px;margin-bottom:6px;align-items:center;}
+  .ch-row input,.ch-row select{background:var(--sf2);border:1px solid var(--bd);border-radius:7px;padding:6px 8px;color:var(--tx);font-size:12px;font-family:var(--font);width:100%;}
+  .ch-del{background:var(--rd);color:#fff;border:none;border-radius:7px;width:28px;height:28px;cursor:pointer;font-size:13px;}
+  .add-ch-btn{background:none;border:1px dashed var(--bd);color:var(--tx2);border-radius:8px;padding:6px 10px;font-size:11.5px;cursor:pointer;width:100%;margin-top:4px;}
+  .stat-line{font-size:11.5px;color:var(--tx3);margin-bottom:14px;}
+  .modal-actions{display:flex;gap:8px;margin-top:16px;position:sticky;bottom:0;background:var(--sf);padding-top:10px;}
+  .modal-save{flex:1;background:linear-gradient(135deg,var(--ac),var(--pu));color:#fff;border:none;border-radius:10px;padding:11px;font-weight:700;font-size:13px;cursor:pointer;}
+  /* شريط تقدم الرفع */
+  .progress-track{width:100%;height:9px;background:var(--sf2);border:1px solid var(--bd);border-radius:6px;overflow:hidden;margin-top:8px;display:none;}
+  .progress-track.show{display:block;}
+  .progress-fill{height:100%;width:0%;background:linear-gradient(135deg,var(--ac),var(--pu));transition:width .25s ease;border-radius:6px;}
+  #il-upload-btn:disabled{opacity:.6;cursor:not-allowed;}
+  /* بطاقة الإجراءات في جدول المستخدمين — تلف بشكل مرتب على الموبايل */
+  .action-cell{display:flex;flex-wrap:wrap;gap:5px;align-items:center;}
+
+  /* 🔔 إشعارات حقيقية أعلى الشاشة (Toast) */
+  .toast-wrap{position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:999;display:flex;flex-direction:column;gap:8px;align-items:stretch;width:100%;max-width:420px;padding:0 12px;pointer-events:none;}
+  .toast{pointer-events:auto;background:var(--sf);border:1px solid var(--bd);border-right:4px solid var(--ac);border-radius:12px;padding:12px 14px;font-size:12.5px;box-shadow:0 12px 34px rgba(0,0,0,.55);display:flex;align-items:flex-start;gap:8px;animation:toastIn .28s ease;}
+  .toast.ok{border-right-color:var(--gn);}
+  .toast.err{border-right-color:var(--rd);}
+  .toast.warn{border-right-color:var(--am);}
+  .toast .tx-close{background:none;border:none;color:var(--tx3);cursor:pointer;font-size:14px;line-height:1;padding:0 2px;}
+  .toast.hide{animation:toastOut .22s ease forwards;}
+  @keyframes toastIn{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
+  @keyframes toastOut{from{opacity:1;max-height:100px}to{opacity:0;max-height:0;padding:0;margin:0;border-width:0}}
+
+  /* ══════════════════════════════════════════
+     📱 تجاوب الموبايل واللابتوب
+     ══════════════════════════════════════════ */
+  @media(max-width:760px){
+    .wrap{padding:16px 10px 50px;}
+    h1{font-size:15.5px;}
+    .sub{font-size:11px;}
+    .top-bar{flex-wrap:wrap;gap:10px;align-items:flex-start;}
+    .top-bar > div:last-child{width:100%;justify-content:flex-start;}
+    #adminEventsPanel{left:0;right:auto;width:min(300px,calc(100vw - 44px));}
+    .card{padding:14px;border-radius:12px;}
+    .prof-grid{grid-template-columns:1fr!important;}
+    .ch-row{grid-template-columns:1fr 1fr;row-gap:6px;}
+    .ch-row input:first-child{grid-column:1/-1;}
+    .met-v{font-size:18px;}
+    table{font-size:11.5px;}
+    th,td{padding:7px 5px;}
+    .modal-box{padding:14px;}
+    .g4[style*="1fr 1fr"]{grid-template-columns:1fr!important;}
+  }
+  @media(max-width:420px){
+    .g4{grid-template-columns:1fr!important;}
+    .logout-btn{font-size:10.5px;padding:6px 9px;}
+  }
+</style>
+</head>
+<body>
+
+<div class="toast-wrap" id="toastWrap"></div>
+
+<div id="loginScreen">
+  <div class="login-box">
+    <h2>🔐 دخول الأدمن</h2>
+    <div class="err" id="loginErr"></div>
+    <form id="loginForm">
+      <div class="field"><label>إيميل الأدمن</label><input type="email" id="adEmail" required></div>
+      <div class="field"><label>كلمة المرور</label><input type="password" id="adPass" required></div>
+      <button class="submit" type="submit" id="adBtn">دخول</button>
+    </form>
+  </div>
+</div>
+
+<div id="appScreen">
+  <div class="wrap">
+    <div class="top-bar">
+      <div>
+        <h1>🔐 لوحة إدارة الاشتراكات والمستخدمين</h1>
+        <div class="sub">مراجعة تسجيلات الطلاب وتفعيل الاشتراكات المدفوعة بعد التأكد من فودافون كاش <span class="vf" id="vfNum"></span></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="position:relative">
+          <button class="logout-btn" onclick="toggleAdminEventsPanel()" style="position:relative">🔔 التنبيهات
+            <span id="adminEventsBadge" style="display:none;position:absolute;top:-6px;left:-6px;background:var(--rd);color:#fff;border-radius:50%;width:18px;height:18px;font-size:10px;align-items:center;justify-content:center">0</span>
+          </button>
+          <div id="adminEventsPanel" style="display:none;position:absolute;left:0;top:38px;width:300px;max-height:360px;overflow-y:auto;background:var(--sf);border:1px solid var(--bd);border-radius:12px;padding:8px;z-index:50;box-shadow:0 10px 30px rgba(0,0,0,.4)"></div>
+        </div>
+        <button class="logout-btn" onclick="adminLogout()">تسجيل الخروج</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="sec-title">📢 إعلان جماعي لكل المستخدمين</div>
+      <div style="font-size:11.5px;color:var(--tx3);margin-bottom:10px">اكتب رسالة وهتظهر كإشعار لكل طالب أول ما يفتح التطبيق (مرة واحدة بس لكل رسالة) — دلوقتي بتوصل فورًا حتى لو التطبيق فاتح بالفعل</div>
+      <textarea id="bc-text" rows="3" placeholder="مثال: تم إضافة فصول جديدة في مادة التاريخ 🎉" style="width:100%;background:var(--sf2);border:1px solid var(--bd);border-radius:9px;padding:10px;color:var(--tx);font-size:13px;font-family:var(--font);margin-bottom:10px;resize:vertical"></textarea>
+      <button class="btn btn-ok" id="bc-btn" onclick="sendBroadcast()">🚀 إرسال لكل المستخدمين</button>
+    </div>
+
+    <div class="card">
+      <div class="sec-title">🎛️ التحكم في واجهة الطالب</div>
+      <div style="font-size:11.5px;color:var(--tx3);margin-bottom:14px">تحكم مباشر وفوري (Realtime) في عناصر واجهة الطالب — أي تغيير هنا بيوصل لكل الطلاب فورًا من غير ما يعملوا ريفرش</div>
+      <div id="uicfg-toggles" style="display:flex;flex-direction:column;gap:10px;margin-bottom:18px"></div>
+      <div style="border-top:1px solid var(--bd);padding-top:14px;margin-top:4px">
+        <div style="font-weight:700;font-size:12.5px;margin-bottom:10px">🎬 فيديو التلاوة وخلفية الكارت</div>
+        <div style="font-size:10.5px;color:var(--tx3);margin-bottom:10px">عاين الفيديوهين اللي شغالين فعليًا عند الطالب دلوقتي — لو ظهر ❌ يبقى الرابط معطوب واستبدله من هنا مباشرة من غير ما تلمس الكود</div>
+        <div class="g4" style="grid-template-columns:1fr 1fr;margin-bottom:14px">
+          <div>
+            <div style="font-size:11px;color:var(--tx2);margin-bottom:6px">🎧 فيديو التلاوة (rec-player)</div>
+            <video id="prevRecVideo" muted loop playsinline controls style="width:100%;border-radius:10px;background:#000;max-height:160px"></video>
+            <div id="prevRecStatus" style="font-size:10.5px;margin-top:4px;color:var(--tx3)">...بيتفحص</div>
+          </div>
+          <div>
+            <div style="font-size:11px;color:var(--tx2);margin-bottom:6px">🖼️ فيديو خلفية كارت المستخدم + بانر الداشبورد</div>
+            <video id="prevBgVideo" muted loop playsinline controls style="width:100%;border-radius:10px;background:#000;max-height:160px"></video>
+            <div id="prevBgStatus" style="font-size:10.5px;margin-top:4px;color:var(--tx3)">...بيتفحص</div>
+          </div>
+        </div>
+        <div class="field"><label>رابط فيديو التلاوة</label><input type="text" id="uicfg-recUrl" style="direction:ltr"></div>
+        <div class="field"><label>رابط فيديو خلفية الكارت</label><input type="text" id="uicfg-bgUrl" style="direction:ltr"></div>
+      </div>
+      <button class="btn btn-pu" id="uicfg-save-btn" onclick="saveUIConfig()">💾 حفظ إعدادات الواجهة</button>
+    </div>
+
+    <div class="g4">
+      <div class="met"><div class="met-v" id="statUsers">0</div><div class="met-l">إجمالي المستخدمين</div></div>
+      <div class="met"><div class="met-v" id="statPaid">0</div><div class="met-l">مشتركين مدفوعين</div></div>
+      <div class="met"><div class="met-v" id="statPending">0</div><div class="met-l">طلبات دفع معلّقة</div></div>
+      <div class="met"><div class="met-v" id="statFree">0</div><div class="met-l">مستخدمين مجانيين</div></div>
+    </div>
+
+    <div class="card">
+      <div class="sec-title">💰 طلبات الدفع (فودافون كاش)</div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr>
+            <th>الاسم</th><th>الإيميل</th><th>رقم التحويل</th><th>المبلغ</th><th>رقم العملية</th><th>الخطة المطلوبة</th><th>الحالة</th><th>إجراء</th>
+          </tr></thead>
+          <tbody id="paymentsBody"></tbody>
+        </table>
+        <div class="empty" id="paymentsEmpty" style="display:none">لا توجد طلبات دفع حاليًا</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="sec-title">🧩 الشرح التفاعلي</div>
+      <div style="font-size:11.5px;color:var(--tx3);margin-bottom:14px">ارفع ملفات HTML تفاعلية أو PDF مرة واحدة — كل ملف بيتفتح تلقائيًا لكل الطلاب لما يوصلوا للأسبوع اللي حددته، والأسابيع بتتجدد أوتوماتيك مع الترم. <b style="color:var(--am)">الملفات بتتخزن مباشرة في قاعدة البيانات المجانية (من غير Firebase Storage)، فالحد الأقصى لحجم الملف الواحد 700 كيلوبايت.</b></div>
+      <div class="prof-grid" style="grid-template-columns:1fr 120px">
+        <div><label>عنوان الدرس (اختياري — هيتحط اسم الملف لو فاضي)</label><input type="text" id="il-title" placeholder="مثال: شرح تفاعلي — درس الإعراب"></div>
+        <div><label>رقم الأسبوع</label><input type="number" id="il-week" min="1" value="1"></div>
+      </div>
+      <div class="field"><label>الملفات (HTML أو PDF — ممكن تختار أكتر من ملف مرة واحدة)</label>
+        <input type="file" id="il-files" accept=".html,.htm,.pdf" multiple style="width:100%;background:var(--sf2);border:1px solid var(--bd);border-radius:9px;padding:10px;color:var(--tx);font-size:12.5px">
+      </div>
+      <button class="btn btn-pu" id="il-upload-btn" onclick="uploadInteractiveLessons()">⬆️ رفع الملفات</button>
+      <div id="il-progress" style="font-size:11px;color:var(--tx3);margin-top:8px"></div>
+      <div class="progress-track" id="il-progress-track"><div class="progress-fill" id="il-progress-fill"></div></div>
+      <div style="border-top:1px solid var(--bd);margin-top:16px;padding-top:14px">
+        <div style="font-weight:700;font-size:12.5px;margin-bottom:10px">الدروس المرفوعة حاليًا</div>
+        <div id="il-list"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="sec-title">🤖 استوديو الذكاء الاصطناعي — اختبارات · بطاقات · خرائط ذهنية</div>
+      <div style="font-size:11.5px;color:var(--tx3);margin-bottom:14px">حدد المادة والموضوع، وهيولّد لك الذكاء الاصطناعي المحتوى مباشرة — عايِنه قبل ما تنشره. أي محتوى تنشره هيظهر تلقائيًا لكل الطلاب اللي وصلوا للأسبوع اللي تحدده (بالظبط زي نظام الشرح التفاعلي).</div>
+      <div class="prof-grid">
+        <div><label>نوع المحتوى</label>
+          <select id="ai-type" onchange="onAITypeChange()">
+            <option value="quiz">📝 اختبار</option>
+            <option value="flashcards">🗂️ بطاقات مراجعة</option>
+            <option value="mindmap">🧠 خريطة ذهنية</option>
+          </select>
+        </div>
+        <div><label>المادة</label>
+          <select id="ai-subject"></select>
+        </div>
+      </div>
+      <div class="prof-grid" style="grid-template-columns:1fr 120px">
+        <div><label>موضوع الدرس / عنوان المحتوى</label><input type="text" id="ai-topic" placeholder="مثال: نظرية التطور — الفصل الثالث"></div>
+        <div><label>رقم الأسبوع</label><input type="number" id="ai-week" min="1" value="1"></div>
+      </div>
+      <div class="field">
+        <label id="ai-size-label">حجم الاختبار</label>
+        <select id="ai-size">
+          <option value="short">قصير</option>
+          <option value="medium" selected>متوسط</option>
+          <option value="long">طويل</option>
+        </select>
+      </div>
+      <button class="btn btn-pu" id="ai-gen-btn" onclick="generateAIContent()">✨ توليد بالذكاء الاصطناعي</button>
+      <div id="ai-gen-status" style="margin-top:10px"></div>
+      <div id="ai-preview"></div>
+      <div id="ai-publish-wrap" style="display:none;gap:8px;margin-top:12px">
+        <button class="btn btn-ok" style="flex:1" onclick="publishAIContent()">🚀 نشر للطلاب</button>
+        <button class="btn" style="background:var(--sf2);color:var(--tx2);border:1px solid var(--bd)" onclick="generateAIContent()">🔄 إعادة التوليد</button>
+      </div>
+      <div style="border-top:1px solid var(--bd);margin-top:16px;padding-top:14px">
+        <div style="font-weight:700;font-size:12.5px;margin-bottom:10px">المحتوى المنشور حاليًا</div>
+        <div id="ai-list"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="sec-title">👥 كل المستخدمين</div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr>
+            <th>الاسم</th><th>الإيميل</th><th>الخطة</th><th>الحالة</th><th>متصل الآن</th><th>إجراء</th>
+          </tr></thead>
+          <tbody id="usersBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="userDataModal">
+  <div class="modal-box">
+    <div class="modal-head">
+      <h3 id="udmTitle">📊 بيانات الطالب</h3>
+      <button class="modal-close" onclick="closeUserData()">✕</button>
+    </div>
+    <div id="udmBody">
+      <div class="empty">...جاري التحميل</div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ══════════════════════════════════════════
+   لازم تحط نفس بيانات Firebase اللي حطيتها
+   في ملف التطبيق الرئيسي (نفس المشروع بالظبط)
+   ══════════════════════════════════════════ */
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyA0R7MR7809tW6tGbGBxbGPF7Tvoj_gbk8",
+  authDomain: "stydy-system-advanced.firebaseapp.com",
+  projectId: "stydy-system-advanced",
+  storageBucket: "stydy-system-advanced.firebasestorage.app",
+  messagingSenderId: "107855910147",
+  appId: "1:107855910147:web:09ba425666c0496fae0536",
+  measurementId: "G-3WV5E0TPDR"
+};
+// لازم يتطابق حرفيًا مع نفس الإيميل المكتوب في ملف التطبيق الرئيسي
+const ADMIN_EMAIL = "ticnologya38@gmail.com";
+const VODAFONE_CASH_NUMBER = "01090309264";
+document.getElementById('vfNum').textContent = VODAFONE_CASH_NUMBER;
+
+// ══ خطط الاشتراك — لازم تتطابق حرفيًا مع نفس القيم في index.html ══
+const PLANS = {
+  basic: { label:'الأساسية', price:40, days:14  },
+  vip:   { label:'VIP',      price:120, days:90  },
+  ultra: { label:'Ultra',    price:200, days:365 }
+};
+
+// ══ نفس مفاتيح المواد وأيقوناتها الموجودة في index.html — لعرضها هنا بس ══
+const SUBJ_INFO_LITE = {
+  general:     {name:'عام (كل المواد)', icon:'✨'},
+  arabic:      {name:'عربي',      icon:'📖'},
+  history:     {name:'تاريخ',     icon:'🌍'},
+  english:     {name:'إنجليزي',   icon:'🇬🇧'},
+  programming: {name:'برمجة',     icon:'💻'},
+  religion:    {name:'دين إسلامي',icon:'☪️'}
+};
+</script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script>
+firebase.initializeApp(FIREBASE_CONFIG);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+// ══════════════════════════════════════════
+// 🤖 استدعاء Claude (نفس طريقة الاستدعاء المستخدمة في index.html — من غير مفتاح API)
+// ══════════════════════════════════════════
+async function claudeRequest(content, systemText){
+  const resp = await fetch('https://api.anthropic.com/v1/messages', {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({
+      model:'claude-sonnet-4-6',
+      max_tokens:1000,
+      system: systemText,
+      messages:[{role:'user', content}]
+    })
+  });
+  const rd = await resp.json();
+  if(rd.error) throw new Error(rd.error.message||'خطأ في الاتصال بالذكاء الاصطناعي');
+  const txt = (rd.content||[]).map(x=>x.text||'').join('');
+  if(!txt) throw new Error('محصلتش رد من الموديل');
+  return txt;
+}
+
+/* ══════════════════════════════════════════
+   🔔 نظام إشعارات حقيقي أعلى الشاشة (Toast)
+   ══════════════════════════════════════════ */
+function showToast(message, type, durationMs){
+  type = type || 'info';
+  durationMs = durationMs || 5000;
+  const wrap = document.getElementById('toastWrap');
+  if(!wrap) return;
+  const el = document.createElement('div');
+  el.className = 'toast '+type;
+  const icon = type==='ok' ? '✅' : type==='err' ? '⚠️' : type==='warn' ? '🔔' : 'ℹ️';
+  el.innerHTML = '<div style="flex-shrink:0">'+icon+'</div><div style="flex:1;line-height:1.5">'+message+'</div><button class="tx-close" onclick="this.parentElement.remove()">✕</button>';
+  wrap.appendChild(el);
+  setTimeout(function(){
+    el.classList.add('hide');
+    setTimeout(function(){ el.remove(); }, 250);
+  }, durationMs);
+}
+
+function showErr(msg){
+  const el = document.getElementById('loginErr');
+  if(!msg){ el.classList.remove('show'); return; }
+  el.textContent = msg; el.classList.add('show');
+}
+
+document.getElementById('loginForm').addEventListener('submit', function(e){
+  e.preventDefault();
+  showErr('');
+  const email = document.getElementById('adEmail').value.trim();
+  const pass = document.getElementById('adPass').value;
+  const btn = document.getElementById('adBtn');
+  btn.disabled = true; btn.textContent = '...جاري الدخول';
+  auth.signInWithEmailAndPassword(email, pass).catch(err=>{
+    console.error('Firebase auth error:', err.code, err.message);
+    showErr('خطأ: ' + err.code + ' — ' + err.message);
+    btn.disabled = false; btn.textContent = 'دخول';
+  });
+});
+
+function adminLogout(){ auth.signOut(); }
+
+let paymentsUnsub = null, usersUnsub = null, adminEventsUnsub = null, interactiveLessonsUnsub = null;
+
+auth.onAuthStateChanged(function(user){
+  if(!user || user.email !== ADMIN_EMAIL){
+    if(user && user.email !== ADMIN_EMAIL){
+      showErr('الحساب ده مش حساب أدمن');
+      auth.signOut();
+    }
+    document.getElementById('loginScreen').style.display = 'flex';
+    document.getElementById('appScreen').style.display = 'none';
+    if(paymentsUnsub){ paymentsUnsub(); paymentsUnsub=null; }
+    if(usersUnsub){ usersUnsub(); usersUnsub=null; }
+    if(uiConfigUnsub){ uiConfigUnsub(); uiConfigUnsub=null; }
+    if(adminEventsUnsub){ adminEventsUnsub(); adminEventsUnsub=null; }
+    if(interactiveLessonsUnsub){ interactiveLessonsUnsub(); interactiveLessonsUnsub=null; }
+    if(aiContentUnsub){ aiContentUnsub(); aiContentUnsub=null; }
+    return;
+  }
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('appScreen').style.display = 'block';
+  listenPayments();
+  listenUsers();
+  listenUIConfig();
+  listenAdminEvents();
+  listenInteractiveLessons();
+  listenAIContent();
+});
+
+let uiConfigUnsub = null;
+let UI_CONFIG_DEFAULTS = {
+  showFlashcards:false, showQuiz:false, sitesPaidOnly:true, recitationEnabled:true,
+  recitationVideoUrl:'rec-video.mp4',
+  cardBgVideoUrl:'hero-video.mp4'
+};
+let curUIConfig = Object.assign({}, UI_CONFIG_DEFAULTS);
+
+const UICFG_TOGGLES = [
+  {key:'showFlashcards', label:'🗂️ إظهار الفلاش كاردز للطلاب', hint:'مخفية حاليًا حسب طلبك — فعّلها تاني وقت ما حبيت من هنا'},
+  {key:'showQuiz', label:'📝 إظهار زر الاختبار لكل فصل', hint:'مخفي حاليًا حسب طلبك'},
+  {key:'sitesPaidOnly', label:'🌐 مواقع الدرس للمشتركين بس', hint:'لو مقفول، هتفضل متاحة لأي طالب زي الفيديوهات العادية'},
+  {key:'recitationEnabled', label:'🎧 إظهار مشغل التلاوة العائم', hint:'الزرار العائم اللي بيشغل تلاوة هادئة لكل الطلاب'}
+];
+
+function renderUICfgToggles(){
+  const wrap = document.getElementById('uicfg-toggles');
+  if(!wrap) return;
+  wrap.innerHTML = UICFG_TOGGLES.map(function(t){
+    const checked = !!curUIConfig[t.key];
+    return '<label style="display:flex;align-items:center;gap:10px;cursor:pointer;background:var(--sf2);border:1px solid var(--bd);border-radius:10px;padding:10px 12px">'+
+      '<input type="checkbox" data-uicfg-key="'+t.key+'" '+(checked?'checked':'')+' style="width:18px;height:18px;flex-shrink:0">'+
+      '<span style="flex:1"><div style="font-size:12.5px;font-weight:700">'+t.label+'</div><div style="font-size:10.5px;color:var(--tx3);margin-top:2px">'+t.hint+'</div></span>'+
+    '</label>';
+  }).join('');
+}
+
+function checkVideoPreview(videoEl, statusEl, url){
+  if(!videoEl || !statusEl) return;
+  statusEl.textContent = '...بيتفحص'; statusEl.style.color = 'var(--tx3)';
+  videoEl.onloadeddata = function(){ statusEl.textContent = '✅ شغال صح'; statusEl.style.color = 'var(--gn)'; };
+  videoEl.onerror = function(){ statusEl.textContent = '❌ الرابط معطوب أو مرفوض من جوجل درايف'; statusEl.style.color = 'var(--rd)'; };
+  videoEl.src = url;
+  videoEl.load();
+}
+
+function listenUIConfig(){
+  if(uiConfigUnsub) uiConfigUnsub();
+  uiConfigUnsub = db.collection('public').doc('uiConfig').onSnapshot(function(doc){
+    curUIConfig = Object.assign({}, UI_CONFIG_DEFAULTS, doc.exists ? doc.data() : {});
+    renderUICfgToggles();
+    const recInp = document.getElementById('uicfg-recUrl');
+    const bgInp = document.getElementById('uicfg-bgUrl');
+    if(recInp) recInp.value = curUIConfig.recitationVideoUrl;
+    if(bgInp) bgInp.value = curUIConfig.cardBgVideoUrl;
+    checkVideoPreview(document.getElementById('prevRecVideo'), document.getElementById('prevRecStatus'), curUIConfig.recitationVideoUrl);
+    checkVideoPreview(document.getElementById('prevBgVideo'), document.getElementById('prevBgStatus'), curUIConfig.cardBgVideoUrl);
+  }, function(err){ console.error('listen uiConfig failed', err); });
+}
+
+function saveUIConfig(){
+  const btn = document.getElementById('uicfg-save-btn');
+  const newCfg = {};
+  UICFG_TOGGLES.forEach(function(t){
+    const el = document.querySelector('[data-uicfg-key="'+t.key+'"]');
+    newCfg[t.key] = el ? !!el.checked : !!curUIConfig[t.key];
+  });
+  newCfg.recitationVideoUrl = (document.getElementById('uicfg-recUrl').value||'').trim() || UI_CONFIG_DEFAULTS.recitationVideoUrl;
+  newCfg.cardBgVideoUrl = (document.getElementById('uicfg-bgUrl').value||'').trim() || UI_CONFIG_DEFAULTS.cardBgVideoUrl;
+  if(btn){ btn.disabled = true; btn.textContent = '...جاري الحفظ'; }
+  db.collection('public').doc('uiConfig').set(newCfg, {merge:true}).then(function(){
+    if(btn){ btn.disabled = false; btn.textContent = '💾 حفظ إعدادات الواجهة'; }
+    alert('✅ اتحفظ! هيوصل لكل الطلاب فورًا من غير ما يعملوا ريفرش.');
+  }).catch(function(err){
+    if(btn){ btn.disabled = false; btn.textContent = '💾 حفظ إعدادات الواجهة'; }
+    alert('حصل خطأ أثناء الحفظ: '+err.message);
+  });
+}
+
+let usersCache = {};
+// بيحفظ آخر اختيار للأدمن في قائمة كل مستخدم، عشان لو الجدول اتعاد رسمه (بسبب تحديث حالة الاتصال
+// مثلاً) الاختيار ميتمسحش ويرجع للخيار الافتراضي قبل ما الأدمن يدوس "تفعيل"
+let planSelections = {};
+
+function isPlanActiveFor(d){
+  if(!d || !d.plan || !PLANS[d.plan]) return false;
+  if(!d.planExpiry) return true;
+  const t = d.planExpiry.toMillis ? d.planExpiry.toMillis() : d.planExpiry;
+  return Date.now() < t;
+}
+function isTrialActiveFor(d){
+  if(!d || !d.trialEnd) return false;
+  const t = d.trialEnd.toMillis ? d.trialEnd.toMillis() : d.trialEnd;
+  return Date.now() < t;
+}
+function fmtDate(ts){
+  if(!ts) return '-';
+  const t = ts.toMillis ? ts.toMillis() : ts;
+  return new Date(t).toLocaleDateString('ar-EG');
+}
+
+function planActionButtons(uid, d){
+  const currentSelection = planSelections[uid] || d.plan || Object.keys(PLANS)[0];
+  const opts = Object.keys(PLANS).map(function(k){
+    return '<option value="'+k+'"'+(k===currentSelection?' selected':'')+'>'+PLANS[k].label+' ('+PLANS[k].price+' ج)</option>';
+  }).join('');
+  return '<div style="display:flex;gap:4px;flex-wrap:wrap;align-items:center">' +
+    '<select id="plan-sel-'+uid+'" onchange="planSelections[\''+uid+'\']=this.value" style="background:var(--sf2);border:1px solid var(--bd);border-radius:7px;padding:4px 6px;color:var(--tx);font-size:11px">'+opts+'</select>' +
+    '<button class="btn btn-ok btn-mini" onclick="setPlanManual(\''+uid+'\',document.getElementById(\'plan-sel-'+uid+'\').value)">تفعيل</button>' +
+    (isPlanActiveFor(d) ? '<button class="btn btn-no btn-mini" onclick="setPlanManual(\''+uid+'\',\'free\')">إلغاء</button>' : '') +
+  '</div>';
+}
+
+const ONLINE_THRESHOLD_MS = 45000; // التطبيق بقى بيبلّغ "غير متصل" فورًا لما التاب يتقفل/يتخفي، فمهلة قصيرة كفاية دلوقتي كشبكة أمان بس
+
+function relTime(ms){
+  const diff = Date.now() - ms;
+  if(diff < 60000) return 'دلوقتي';
+  const mins = Math.floor(diff/60000);
+  if(mins < 60) return 'من '+mins+' دقيقة';
+  const hrs = Math.floor(mins/60);
+  if(hrs < 24) return 'من '+hrs+' ساعة';
+  const days = Math.floor(hrs/24);
+  return 'من '+days+' يوم';
+}
+
+function presenceCell(d){
+  const lastSeenMs = d.lastSeen && d.lastSeen.toMillis ? d.lastSeen.toMillis() : (d.lastSeen||0);
+  const isOnline = !!d.online && lastSeenMs && (Date.now()-lastSeenMs) < ONLINE_THRESHOLD_MS;
+  if(isOnline) return '<span style="color:var(--gn);font-size:11px;font-weight:700">🟢 متصل الآن</span>';
+  if(!lastSeenMs) return '<span style="color:var(--tx3);font-size:11px">⚪ لسه ما دخلش</span>';
+  return '<span style="color:var(--tx3);font-size:11px">⚪ آخر ظهور '+relTime(lastSeenMs)+'</span>';
+}
+
+let latestUsersDocs = [];
+function listenUsers(){
+  // ملحوظة: شلنا .orderBy('createdAt') عمدًا — لو مستخدم جديد اتسجل والـ serverTimestamp
+  // لسه بيتحسب، ترتيب Firestore ممكن يستبعده لحظيًا. بنجيب كل المستخدمين ونرتبهم يدويًا بعد كده،
+  // فأي تسجيل جديد بيظهر فورًا حتى لو تاريخه لسه مايتحطش.
+  usersUnsub = db.collection('users').onSnapshot(function(snap){
+    usersCache = {};
+    let docs = [];
+    snap.forEach(function(doc){ docs.push(doc); usersCache[doc.id]=doc.data(); });
+    latestUsersDocs = docs;
+    detectNewUserSignups(docs);
+    scheduleRenderUsersTable();
+  }, function(err){
+    console.error(err);
+    document.getElementById('usersBody').innerHTML = '<tr><td colspan="6" class="empty">تعذر تحميل المستخدمين — تأكد من قواعد Firestore</td></tr>';
+  });
+}
+
+// تحديثات "متصل الآن" بتوصل بكثرة (كل ما أي طالب يفتح/يقفل التطبيق)، فبدل ما نعيد رسم
+// الجدول كامل فورًا في كل مرة (وده كان بيمسح اختيار الخطة في القائمة المنسدلة قبل ما الأدمن يدوس "تفعيل")،
+// بنستنى شوية صغيرة ونجمّع التحديثات المتلاحقة في رسمة واحدة بس.
+let renderUsersDebounceTimer = null;
+function scheduleRenderUsersTable(){
+  clearTimeout(renderUsersDebounceTimer);
+  renderUsersDebounceTimer = setTimeout(renderUsersTable, 500);
+}
+
+// بينادى دوري كل شوية عشان "آخر ظهور" و"متصل الآن" يفضلوا محدّثين حتى لو محصلش تغيير جديد في فايرستور
+setInterval(function(){ if(latestUsersDocs.length) renderUsersTable(); }, 20000);
+
+function renderUsersTable(){
+  let docs = latestUsersDocs.slice();
+  docs.sort(function(a,b){
+    const ta = a.data().createdAt && a.data().createdAt.toMillis ? a.data().createdAt.toMillis() : 0;
+    const tb = b.data().createdAt && b.data().createdAt.toMillis ? b.data().createdAt.toMillis() : 0;
+    return tb - ta;
+  });
+  let rows = '';
+  let paid=0, free=0;
+  docs.forEach(function(doc){
+    const d = doc.data();
+    const active = isPlanActiveFor(d);
+    const trial = !active && isTrialActiveFor(d);
+    if(active) paid++; else free++;
+    let planCell, statusCell;
+    if(active){
+      planCell = '<span class="badge paid">'+(PLANS[d.plan]?PLANS[d.plan].label:d.plan)+'</span><div style="font-size:10px;color:var(--tx3);margin-top:3px">لغاية '+fmtDate(d.planExpiry)+'</div>';
+      statusCell = '<span class="badge paid">مدفوع</span>';
+    }else if(trial){
+      planCell = '<span class="badge free">مجاني</span><div style="font-size:10px;color:var(--tx3);margin-top:3px">تجربة لغاية '+fmtDate(d.trialEnd)+'</div>';
+      statusCell = '<span class="badge pending">🎁 تجربة</span>';
+    }else{
+      planCell = '<span class="badge free">مجاني</span>';
+      statusCell = d.paymentStatus==='pending' ? '<span class="badge pending">معلّق</span>' : '<span class="badge free">مجاني</span>';
+    }
+    if(d.banned) statusCell += ' <span class="badge rejected">🚫 محظور</span>';
+    rows += '<tr>' +
+      '<td>'+esc(d.name||'-')+'</td>' +
+      '<td style="direction:ltr;text-align:right">'+esc(d.email||'-')+'</td>' +
+      '<td>'+planCell+'</td>' +
+      '<td>'+statusCell+'</td>' +
+      '<td>'+presenceCell(d)+'</td>' +
+      '<td><div class="action-cell">' +
+        planActionButtons(doc.id, d) +
+        '<button class="btn btn-pu btn-mini" onclick="openUserData(\''+doc.id+'\',\''+esc(d.name||d.email||'-').replace(/'/g,"\\'")+'\')">📊 بيانات المذاكرة</button>' +
+        (d.banned
+          ? '<button class="btn btn-ok btn-mini" onclick="toggleBanUser(\''+doc.id+'\',false)">✅ فك الحظر</button>'
+          : '<button class="btn btn-no btn-mini" onclick="toggleBanUser(\''+doc.id+'\',true)">🚫 حظر</button>') +
+      '</div></td>' +
+    '</tr>';
+  });
+  document.getElementById('usersBody').innerHTML = rows || '<tr><td colspan="6" class="empty">لا يوجد مستخدمين بعد</td></tr>';
+  document.getElementById('statUsers').textContent = docs.length;
+  document.getElementById('statPaid').textContent = paid;
+  document.getElementById('statFree').textContent = free;
+}
+
+function listenPayments(){
+  paymentsUnsub = db.collection('paymentRequests').onSnapshot(function(snap){
+    let docs = [];
+    snap.forEach(function(doc){ docs.push(doc); });
+    docs.sort(function(a,b){
+      const ta = a.data().createdAt && a.data().createdAt.toMillis ? a.data().createdAt.toMillis() : 0;
+      const tb = b.data().createdAt && b.data().createdAt.toMillis ? b.data().createdAt.toMillis() : 0;
+      return tb - ta;
+    });
+    let rows = '';
+    let pendingCount = 0;
+    docs.forEach(function(doc){
+      const d = doc.data();
+      if(d.status==='pending') pendingCount++;
+      const badgeClass = d.status==='approved' ? 'paid' : (d.status==='rejected' ? 'rejected' : 'pending');
+      const badgeText = d.status==='approved' ? 'مقبول' : (d.status==='rejected' ? 'مرفوض' : 'معلّق');
+      const planLabel = PLANS[d.planRequested] ? PLANS[d.planRequested].label+' ('+PLANS[d.planRequested].price+' ج)' : (d.planRequested||'—');
+      rows += '<tr>' +
+        '<td>'+esc(d.name||'-')+'</td>' +
+        '<td style="direction:ltr;text-align:right">'+esc(d.email||'-')+'</td>' +
+        '<td style="direction:ltr;text-align:right">'+esc(d.phone||'-')+'</td>' +
+        '<td>'+esc(d.amount||'-')+'</td>' +
+        '<td>'+esc(d.txRef||'-')+'</td>' +
+        '<td>'+esc(planLabel)+'</td>' +
+        '<td><span class="badge '+badgeClass+'">'+badgeText+'</span></td>' +
+        '<td>' +
+          (d.status==='pending'
+            ? '<button class="btn btn-ok btn-mini" onclick="approvePayment(\''+doc.id+'\',\''+d.uid+'\')">✅ قبول</button>' +
+              '<button class="btn btn-no btn-mini" onclick="rejectPayment(\''+doc.id+'\',\''+d.uid+'\')">❌ رفض</button>'
+            : '—') +
+        '</td>' +
+      '</tr>';
+    });
+    document.getElementById('paymentsBody').innerHTML = rows;
+    document.getElementById('paymentsEmpty').style.display = rows ? 'none' : 'block';
+    document.getElementById('statPending').textContent = pendingCount;
+  }, function(err){
+    console.error(err);
+    document.getElementById('paymentsBody').innerHTML = '';
+    document.getElementById('paymentsEmpty').style.display = 'block';
+    document.getElementById('paymentsEmpty').textContent = 'تعذر تحميل الطلبات — تأكد من قواعد Firestore';
+  });
+}
+
+function approvePayment(requestId, uid){
+  if(!confirm('اتأكدت إن الفلوس وصلت على فودافون كاش؟ هيتم تفعيل الاشتراك فورًا.')) return;
+  delete planSelections[uid];
+  db.collection('paymentRequests').doc(requestId).get().then(function(reqDoc){
+    const planKey = reqDoc.exists ? reqDoc.data().planRequested : null;
+    const plan = PLANS[planKey] ? planKey : 'basic'; // fallback احتياطي لو الطلب قديم من غير خطة محددة
+    const days = PLANS[plan].days;
+    const expiry = new Date(Date.now() + days*86400000);
+    return Promise.all([
+      db.collection('paymentRequests').doc(requestId).update({status:'approved'}),
+      db.collection('users').doc(uid).update({plan:plan, paymentStatus:'approved', planStart:new Date(), planExpiry:expiry})
+    ]);
+  }).catch(function(err){ alert('حصل خطأ: '+err.message); });
+}
+
+function rejectPayment(requestId, uid){
+  if(!confirm('هل أنت متأكد من رفض طلب الدفع ده؟')) return;
+  Promise.all([
+    db.collection('paymentRequests').doc(requestId).update({status:'rejected'}),
+    db.collection('users').doc(uid).update({paymentStatus:'none'})
+  ]).catch(function(err){ alert('حصل خطأ: '+err.message); });
+}
+
+function setPlanManual(uid, planKey){
+  delete planSelections[uid];
+  if(planKey==='free' || !PLANS[planKey]){
+    db.collection('users').doc(uid).update({plan:'free', paymentStatus:'none', planExpiry:null})
+      .catch(function(err){ alert('حصل خطأ: '+err.message); });
+    return;
+  }
+  const days = PLANS[planKey].days;
+  const expiry = new Date(Date.now() + days*86400000);
+  db.collection('users').doc(uid).update({plan:planKey, paymentStatus:'approved', planStart:new Date(), planExpiry:expiry})
+    .catch(function(err){ alert('حصل خطأ: '+err.message); });
+}
+
+function esc(str){
+  return String(str).replace(/[&<>"']/g, function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+  });
+}
+
+// حظر/فك حظر مستخدم — الحساب المحظور بيتطرد فورًا من index.html ومايقدرش يدخل تاني
+function toggleBanUser(uid, banned){
+  if(banned && !confirm('متأكد إنك عايز تحظر المستخدم ده؟ هيتطرد فورًا من التطبيق ومش هيقدر يدخل تاني لحد ما تفك الحظر.')) return;
+  db.collection('users').doc(uid).update({banned: !!banned})
+    .then(function(){ showToast(banned?'🚫 تم حظر المستخدم':'✅ تم فك الحظر', banned?'warn':'ok'); })
+    .catch(function(err){ showToast('حصل خطأ: '+err.message, 'err'); });
+}
+
+/* ══════════════════════════════════════════
+   إعلان جماعي — بيتخزن في public/announcement
+   وكل مستخدم بيشوفه كإشعار (toast) أول ما يفتح
+   التطبيق (index.html) بعد النشر، مرة واحدة بس.
+   ══════════════════════════════════════════ */
+function sendBroadcast(){
+  const text = document.getElementById('bc-text').value.trim();
+  if(!text){ alert('اكتب نص الرسالة الأول'); return; }
+  const btn = document.getElementById('bc-btn');
+  btn.disabled = true; btn.textContent = '...جاري الإرسال';
+  db.collection('public').doc('announcement').set({
+    text: text,
+    version: firebase.firestore.FieldValue.increment(1),
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+  }, {merge:true}).then(function(){
+    btn.disabled = false; btn.textContent = '🚀 إرسال لكل المستخدمين';
+    document.getElementById('bc-text').value = '';
+    alert('✅ اتبعتت! هتظهر لكل طالب أول ما يفتح التطبيق.');
+  }).catch(function(err){
+    btn.disabled = false; btn.textContent = '🚀 إرسال لكل المستخدمين';
+    alert('حصل خطأ: '+err.message);
+  });
+}
+
+/* ══════════════════════════════════════════
+   محرر بيانات مذاكرة الطالب — الأدمن يقدر يشوف
+   ويعدّل مواد وفصول أي طالب مباشرة من هنا.
+   البيانات متخزنة في users/{uid}/appData/main كـ JSON string
+   (نفس الشكل اللي بيتخزن بيه في المتصفح عند الطالب).
+   ══════════════════════════════════════════ */
+const SUBJ_NAMES = {arabic:'📖 عربي',history:'🌍 تاريخ',english:'🇬🇧 إنجليزي',programming:'💻 برمجة',religion:'☪️ دين إسلامي'};
+let udmUid = null, udmData = null, udmChId = 1, udmScope = 'private';
+
+function openUserData(uid, name){
+  udmUid = uid;
+  udmScope = 'private';
+  document.getElementById('udmTitle').textContent = '📊 بيانات مذاكرة: ' + name;
+  document.getElementById('udmBody').innerHTML = '<div class="empty">...جاري التحميل</div>';
+  document.getElementById('userDataModal').classList.add('show');
+  db.collection('users').doc(uid).collection('appData').doc('main').get().then(function(doc){
+    if(!doc.exists || !doc.data().data){
+      document.getElementById('udmBody').innerHTML = '<div class="empty">الطالب ده لسه ملوش بيانات مذاكرة متزامنة (يمكن لسه مسجّلش دخول على التطبيق بعد آخر تحديث)</div>';
+      udmData = null;
+      return;
+    }
+    try{ udmData = JSON.parse(doc.data().data); }
+    catch(e){ document.getElementById('udmBody').innerHTML = '<div class="empty">تعذر قراءة بيانات الطالب — البيانات تالفة</div>'; udmData=null; return; }
+    renderUdmBody();
+  }).catch(function(err){
+    document.getElementById('udmBody').innerHTML = '<div class="empty">تعذر التحميل: '+esc(err.message)+'</div>';
+  });
+}
+
+function closeUserData(){
+  document.getElementById('userDataModal').classList.remove('show');
+  udmUid = null; udmData = null;
+}
+
+function renderUdmBody(){
+  const d = udmData;
+  let html = '';
+  html += '<div class="prof-grid">' +
+    '<div><label>الاسم</label><input id="udm-name" value="'+esc(d.name||'')+'"></div>' +
+    '<div><label>رقم الهاتف</label><input id="udm-phone" value="'+esc(d.phone||'')+'"></div>' +
+    '<div><label>بداية الترم</label><input type="date" id="udm-termStart" value="'+esc(d.termStart||'')+'"></div>' +
+    '<div><label>نهاية الترم</label><input type="date" id="udm-termEnd" value="'+esc(d.termEnd||'')+'"></div>' +
+  '</div>';
+  html += '<div class="stat-line">🔥 أيام مذاكرة مسجّلة: '+((d.streak||[]).length)+' — ⏱ جلسات بومودورو: '+(d.pomCount||0)+' — 🎯 جلسات مسجّلة: '+((d.sessions||[]).length)+' <span style="opacity:.7">(للعرض فقط)</span></div>';
+
+  html += '<div class="scope-box" style="border:1px solid var(--bd);border-radius:10px;padding:12px;margin-bottom:16px;background:var(--sf2)">' +
+    '<div style="font-weight:800;font-size:12.5px;margin-bottom:8px">🎯 نطاق أي فصل جديد هتضيفه دلوقتي</div>' +
+    '<div style="display:flex;gap:16px;flex-wrap:wrap;font-size:12px">' +
+      '<label style="display:flex;align-items:center;gap:5px;cursor:pointer"><input type="radio" name="udm-scope" value="private" '+(udmScope==='private'?'checked':'')+' onchange="udmScope=this.value"> 🔒 خاص — يوصل للطالب ده بس</label>' +
+      '<label style="display:flex;align-items:center;gap:5px;cursor:pointer"><input type="radio" name="udm-scope" value="public" '+(udmScope==='public'?'checked':'')+' onchange="udmScope=this.value"> 🌍 عام — يوصل لكل الطلاب</label>' +
+    '</div>' +
+    '<div style="font-size:10.5px;color:var(--tx3);margin-top:6px">ده بيأثر بس على الفصول الجديدة اللي هتضيفها دلوقتي بزرار "+ إضافة فصل جديد". تعديل أو حذف فصل موجود بيفضل خاص بالطالب ده دايمًا.</div>' +
+  '</div>';
+
+  udmChId = 1;
+  Object.keys(SUBJ_NAMES).forEach(function(k){
+    const subj = d.subjects && d.subjects[k] ? d.subjects[k] : {chapters:[]};
+    html += '<div class="subj-block" data-subj="'+k+'">';
+    html += '<div class="subj-head">'+SUBJ_NAMES[k]+' <span style="color:var(--tx3);font-weight:400">('+(subj.chapters||[]).length+' فصل)</span></div>';
+    html += '<div class="ch-list">';
+    (subj.chapters||[]).forEach(function(ch){
+      html += renderChRow(ch);
+    });
+    html += '</div>';
+    html += '<button type="button" class="add-ch-btn" onclick="addChRow(this)">+ إضافة فصل جديد</button>';
+    html += '</div>';
+  });
+
+  html += '<div class="modal-actions">' +
+    '<button class="modal-save" onclick="saveUserData()">💾 حفظ التعديلات</button>' +
+    '</div>';
+  document.getElementById('udmBody').innerHTML = html;
+}
+
+function renderChRow(ch){
+  const localId = 'ch'+(udmChId++);
+  const statusOpts = [['pending','لسه'],['review','مراجعة'],['done','خلصان']];
+  let opts = '';
+  statusOpts.forEach(function(o){
+    opts += '<option value="'+o[0]+'"'+(ch.status===o[0]?' selected':'')+'>'+o[1]+'</option>';
+  });
+  return '<div class="ch-row" data-chid="'+esc(ch.id)+'" id="'+localId+'">' +
+    '<input value="'+esc(ch.name||'')+'" data-f="name" placeholder="اسم الفصل">' +
+    '<input type="date" value="'+esc(ch.due||'')+'" data-f="due">' +
+    '<select data-f="status">'+opts+'</select>' +
+    '<button type="button" class="ch-del" onclick="this.closest(\'.ch-row\').remove()">✕</button>' +
+  '</div>';
+}
+
+function addChRow(btn){
+  const wrap = btn.previousElementSibling;
+  const div = document.createElement('div');
+  div.innerHTML = renderChRow({id:'new'+Date.now(), name:'', due:'', status:'pending'});
+  wrap.appendChild(div.firstChild);
+}
+
+function saveUserData(){
+  if(!udmUid || !udmData) return;
+  const d = udmData;
+  d.name = document.getElementById('udm-name').value.trim();
+  d.phone = document.getElementById('udm-phone').value.trim();
+  d.termStart = document.getElementById('udm-termStart').value;
+  d.termEnd = document.getElementById('udm-termEnd').value;
+
+  const newlyAdded = {}; // subject key -> array of chapters اتضافوا دلوقتي في الجلسة دي
+  document.querySelectorAll('.subj-block').forEach(function(block){
+    const k = block.getAttribute('data-subj');
+    if(!d.subjects[k]) d.subjects[k] = {chapters:[],teachers:[],selectedTeacher:null};
+    const chapters = [];
+    block.querySelectorAll('.ch-row').forEach(function(row){
+      const name = row.querySelector('[data-f="name"]').value.trim();
+      if(!name) return; // فصل فاضي من غير اسم — يتجاهل
+      const chidAttr = row.getAttribute('data-chid');
+      const isNew = chidAttr.indexOf('new')===0;
+      const chObj = {
+        id: isNew ? Date.now()+Math.floor(Math.random()*1000) : (isNaN(Number(chidAttr)) ? chidAttr : Number(chidAttr)),
+        name: name,
+        due: row.querySelector('[data-f="due"]').value || '',
+        status: row.querySelector('[data-f="status"]').value,
+        addedDate: today(),
+        reviewDates: [],
+        aiPres: null
+      };
+      chapters.push(chObj);
+      if(isNew){
+        if(!newlyAdded[k]) newlyAdded[k] = [];
+        newlyAdded[k].push(chObj);
+      }
+    });
+    d.subjects[k].chapters = chapters;
+  });
+
+  const btn = document.querySelector('.modal-save');
+  if(btn){ btn.disabled = true; btn.textContent = '...جاري الحفظ'; }
+  db.collection('users').doc(udmUid).collection('appData').doc('main').set({
+    data: JSON.stringify(d),
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+    updatedBy: 'admin'
+  }, {merge:true}).then(function(){
+    if(btn){ btn.disabled=false; btn.textContent='💾 حفظ التعديلات'; }
+    if(udmScope === 'public' && Object.keys(newlyAdded).length){
+      const savedUid = udmUid;
+      closeUserData();
+      propagatePublicChapters(newlyAdded, savedUid);
+    } else {
+      alert('✅ اتحفظ! التعديل هيظهر عند الطالب بس (خاص) أول ما يعمل تسجيل دخول أو ريفرش.');
+      closeUserData();
+    }
+  }).catch(function(err){
+    if(btn){ btn.disabled=false; btn.textContent='💾 حفظ التعديلات'; }
+    alert('حصل خطأ أثناء الحفظ: '+err.message);
+  });
+}
+
+/* ══════════════════════════════════════════
+   بث الفصول الجديدة (اللي اتضافت بخيار "عام") لكل
+   المستخدمين التانيين غير الطالب اللي كنت بتعدّل بياناته.
+   بيضيف نفس الفصول الجديدة بس — من غير ما يلمس أي حاجة
+   تانية في بيانات المستخدمين التانيين.
+   ══════════════════════════════════════════ */
+function propagatePublicChapters(newlyAdded, excludeUid){
+  const subjKeys = Object.keys(newlyAdded);
+  if(!subjKeys.length) return;
+  const targetUids = Object.keys(usersCache).filter(function(uid){ return uid !== excludeUid; });
+  if(!targetUids.length){
+    alert('✅ اتحفظ! (مفيش مستخدمين تانيين نبعتلهم الفصول العامة دلوقتي)');
+    return;
+  }
+  if(!confirm('هيتم إضافة الفصول الجديدة دي كمان لباقي المستخدمين (عددهم '+targetUids.length+'). تكمل؟')){
+    alert('✅ اتحفظ للطالب ده بس (اتلغى البث العام).');
+    return;
+  }
+
+  let done = 0, failed = 0, skipped = 0;
+  const total = targetUids.length;
+
+  const jobs = targetUids.map(function(uid){
+    return db.collection('users').doc(uid).collection('appData').doc('main').get().then(function(doc){
+      if(!doc.exists || !doc.data().data){ skipped++; return; } // الطالب ده لسه ملوش بيانات متزامنة
+      let dd;
+      try{ dd = JSON.parse(doc.data().data); }
+      catch(e){ failed++; return; }
+      if(!dd.subjects) dd.subjects = {};
+      subjKeys.forEach(function(k){
+        if(!dd.subjects[k]) dd.subjects[k] = {chapters:[],teachers:[],selectedTeacher:null};
+        if(!dd.subjects[k].chapters) dd.subjects[k].chapters = [];
+        newlyAdded[k].forEach(function(ch, i){
+          dd.subjects[k].chapters.push({
+            id: Date.now()+Math.floor(Math.random()*100000)+i,
+            name: ch.name,
+            due: ch.due,
+            status: 'pending',
+            addedDate: today(),
+            reviewDates: [],
+            aiPres: null
+          });
+        });
+      });
+      return db.collection('users').doc(uid).collection('appData').doc('main').set({
+        data: JSON.stringify(dd),
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+        updatedBy: 'admin-broadcast'
+      }, {merge:true}).then(function(){ done++; }).catch(function(){ failed++; });
+    }).catch(function(){ failed++; });
+  });
+
+  Promise.all(jobs).then(function(){
+    let msg = '🌍 تم بث الفصول الجديدة! وصلت لـ '+done+' من '+total+' مستخدم.';
+    if(skipped) msg += '\n(اتجاهل '+skipped+' طالب لسه ملهمش بيانات متزامنة — هيظهرلهم أول ما يبقى عندهم بيانات).';
+    if(failed) msg += '\n⚠️ فشل الإرسال لـ '+failed+' مستخدم.';
+    alert(msg);
+  });
+}
+
+function today(){ return new Date().toISOString().split('T')[0]; }
+
+/* ══════════════════════════════════════════
+   🔔 إشعارات الأدمن — مستخدم جديد سجل، أو طالب
+   خلّص كل مهام الأسبوع الحالي (adminEvents collection)
+   ══════════════════════════════════════════ */
+let adminEventsCache = [];
+let _knownUserIds = null; // null = أول تحميل، لسه محددناش المعروفين
+let _adminEventsFirstLoad = true; // عشان مانعملش توست لكل الأحداث القديمة أول ما الصفحة تفتح
+const ADMIN_EVENTS_SEEN_KEY = 'admin_events_last_seen_at';
+
+function listenAdminEvents(){
+  if(adminEventsUnsub) adminEventsUnsub();
+  _adminEventsFirstLoad = true;
+  adminEventsUnsub = db.collection('adminEvents').orderBy('at','desc').limit(30)
+    .onSnapshot(function(snap){
+      adminEventsCache = [];
+      snap.forEach(function(doc){ adminEventsCache.push(Object.assign({id:doc.id}, doc.data())); });
+      if(!_adminEventsFirstLoad){
+        snap.docChanges().forEach(function(ch){
+          if(ch.type==='added'){
+            const ev = ch.doc.data();
+            if(ev.type==='week-complete') showToast('🎉 '+(ev.name||'طالب')+' خلّص كل مهام الأسبوع '+(ev.week||'')+'!', 'ok', 8000);
+          }
+        });
+      }
+      _adminEventsFirstLoad = false;
+      renderAdminEventsPanel();
+    }, function(err){ console.error('listen adminEvents failed', err); });
+}
+
+// نكتشف تسجيل مستخدم جديد بمقارنة قائمة الـ uids الحالية بالقائمة اللي فاتت
+function detectNewUserSignups(docs){
+  const ids = docs.map(function(d){ return d.id; });
+  if(_knownUserIds === null){ _knownUserIds = new Set(ids); return; } // أول تحميل — منعتبروش "جديد"
+  ids.forEach(function(id){
+    if(!_knownUserIds.has(id)){
+      _knownUserIds.add(id);
+      const d = usersCache[id] || {};
+      pushLocalAdminNotice('🆕 مستخدم جديد سجّل: '+(d.name||d.email||id));
+    }
+  });
+}
+
+// إشعار محلي فوري (مش متخزن في فايرستور) — بيضاف فوق قائمة adminEvents المعروضة بس
+function pushLocalAdminNotice(text){
+  adminEventsCache.unshift({id:'local-'+Date.now(), type:'local', text:text, at:{toMillis:function(){return Date.now();}}});
+  renderAdminEventsPanel();
+  bumpAdminEventsBadge();
+  showToast(text, 'info', 8000);
+}
+
+function renderAdminEventsPanel(){
+  const el = document.getElementById('adminEventsPanel');
+  if(!el) return;
+  if(!adminEventsCache.length){
+    el.innerHTML = '<div class="empty" style="padding:14px">لا توجد تنبيهات حاليًا</div>';
+  }else{
+    el.innerHTML = adminEventsCache.map(function(ev){
+      const ms = ev.at && ev.at.toMillis ? ev.at.toMillis() : Date.now();
+      let text = ev.text;
+      if(!text){
+        if(ev.type==='week-complete') text = '🎉 '+(ev.name||'طالب')+' خلّص كل مهام الأسبوع '+(ev.week||'')+'!';
+        else text = 'تنبيه جديد';
+      }
+      return '<div style="padding:9px 8px;border-bottom:1px solid var(--bd);font-size:12px">'+
+        '<div>'+esc(text)+'</div>' +
+        '<div style="font-size:10px;color:var(--tx3);margin-top:3px">'+relTime(ms)+'</div>' +
+      '</div>';
+    }).join('');
+  }
+  updateAdminEventsBadgeFromUnseen();
+}
+
+function updateAdminEventsBadgeFromUnseen(){
+  const lastSeen = Number(localStorage.getItem(ADMIN_EVENTS_SEEN_KEY)||0);
+  const unseen = adminEventsCache.filter(function(ev){
+    const ms = ev.at && ev.at.toMillis ? ev.at.toMillis() : 0;
+    return ms > lastSeen;
+  }).length;
+  setAdminEventsBadge(unseen);
+}
+function bumpAdminEventsBadge(){ updateAdminEventsBadgeFromUnseen(); }
+function setAdminEventsBadge(n){
+  const b = document.getElementById('adminEventsBadge');
+  if(!b) return;
+  if(n>0){ b.style.display='flex'; b.textContent = n>9?'9+':n; }
+  else b.style.display='none';
+}
+
+function toggleAdminEventsPanel(){
+  const el = document.getElementById('adminEventsPanel');
+  if(!el) return;
+  const show = el.style.display!=='block';
+  el.style.display = show?'block':'none';
+  if(show){
+    localStorage.setItem(ADMIN_EVENTS_SEEN_KEY, String(Date.now()));
+    setAdminEventsBadge(0);
+  }
+}
+document.addEventListener('click', function(e){
+  const panel = document.getElementById('adminEventsPanel');
+  const btn = e.target.closest ? e.target.closest('button') : null;
+  if(!panel || panel.style.display!=='block') return;
+  if(panel.contains(e.target)) return;
+  if(btn && btn.getAttribute('onclick')==='toggleAdminEventsPanel()') return;
+  panel.style.display = 'none';
+});
+
+/* ══════════════════════════════════════════
+   🧩 الشرح التفاعلي — تخزين الملف (HTML/PDF) مباشرة
+   كـ Base64 جوا مستنده الخاص في مجموعة interactiveLessons
+   (بدل Firebase Storage اللي بقى محتاج خطة Blaze) — كل ملف
+   في مستند منفصل عشان نفضل تحت حد الـ1 ميجابايت للمستند
+   ══════════════════════════════════════════ */
+let interactiveLessonsCache = [];
+const MAX_LESSON_FILE_BYTES = 700 * 1024; // 700 كيلوبايت خام — بعد الـ Base64 هيبقى حوالي 933 كيلو، آمن تحت حد الميجابايت
+
+function listenInteractiveLessons(){
+  if(interactiveLessonsUnsub) interactiveLessonsUnsub();
+  interactiveLessonsUnsub = db.collection('interactiveLessons').onSnapshot(function(snap){
+    interactiveLessonsCache = [];
+    snap.forEach(function(doc){ interactiveLessonsCache.push(Object.assign({id:doc.id}, doc.data())); });
+    renderInteractiveLessonsList();
+  }, function(err){ console.error('listen interactiveLessons failed', err); });
+}
+
+function renderInteractiveLessonsList(){
+  const el = document.getElementById('il-list');
+  if(!el) return;
+  if(!interactiveLessonsCache.length){
+    el.innerHTML = '<div class="empty">لسه مفيش دروس مرفوعة</div>';
+    return;
+  }
+  const sorted = interactiveLessonsCache.slice().sort(function(a,b){ return (a.week||1)-(b.week||1); });
+  el.innerHTML = sorted.map(function(les){
+    const kb = les.size ? Math.round(les.size/1024)+' ك.ب' : '';
+    return '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 6px;border-bottom:1px solid var(--bd);font-size:12px">' +
+      '<div style="min-width:0"><div style="font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+(les.type==='pdf'?'📄':'🧩')+' '+esc(les.title||'-')+'</div>' +
+      '<div style="font-size:10.5px;color:var(--tx3);margin-top:2px">أسبوع '+(les.week||1)+(kb?' · '+kb:'')+'</div></div>' +
+      '<button class="btn btn-no btn-mini" onclick="deleteInteractiveLesson(\''+les.id+'\')">🗑️ حذف</button>' +
+    '</div>';
+  }).join('');
+}
+
+// بيحوّل ملف لنص Base64 (من غير data:...;base64, البادئة) مع تتبّع تقدّم القراءة
+function readFileAsBase64(file, onProgress){
+  return new Promise(function(resolve, reject){
+    const reader = new FileReader();
+    reader.onprogress = function(e){ if(e.lengthComputable) onProgress(e.loaded); };
+    reader.onload = function(){
+      onProgress(file.size);
+      const result = reader.result; // "data:<mime>;base64,XXXX"
+      const commaIdx = result.indexOf(',');
+      resolve(result.slice(commaIdx+1));
+    };
+    reader.onerror = function(){ reject(reader.error || new Error('تعذرت قراءة الملف')); };
+    reader.readAsDataURL(file);
+  });
+}
+
+function uploadInteractiveLessons(){
+  const filesInp = document.getElementById('il-files');
+  const files = filesInp.files;
+  if(!files || !files.length){ showToast('اختار ملف واحد على الأقل الأول', 'warn'); return; }
+  const fileList = Array.from(files);
+
+  // فحص الحجم الأول قبل أي حاجة — أضمن من إننا نكتشف فشل الحفظ بعد ما ننتظر
+  const tooBig = fileList.filter(function(f){ return f.size > MAX_LESSON_FILE_BYTES; });
+  if(tooBig.length){
+    showToast('الملف "'+tooBig[0].name+'" حجمه '+Math.round(tooBig[0].size/1024)+' ك.ب — أكبر من الحد الأقصى المسموح (700 ك.ب) لأننا بنخزّنه مباشرة في قاعدة البيانات المجانية. قسّم الملف أو صغّره وحاول تاني.', 'err', 10000);
+    return;
+  }
+
+  const week = parseInt(document.getElementById('il-week').value)||1;
+  const titleBase = document.getElementById('il-title').value.trim();
+  const btn = document.getElementById('il-upload-btn');
+  const progEl = document.getElementById('il-progress');
+  const track = document.getElementById('il-progress-track');
+  const fill = document.getElementById('il-progress-fill');
+
+  btn.disabled = true; btn.textContent = '...جاري الرفع';
+  track.classList.add('show'); fill.style.width = '0%';
+
+  const totals = fileList.map(function(f){ return f.size; });
+  const transferred = fileList.map(function(){ return 0; });
+  const grandTotal = totals.reduce(function(a,b){ return a+b; }, 0) || 1;
+
+  function updateOverallProgress(){
+    const sum = transferred.reduce(function(a,b){ return a+b; }, 0);
+    const pct = Math.min(100, Math.round((sum/grandTotal)*100));
+    fill.style.width = pct+'%';
+    progEl.textContent = 'بيرفع... '+pct+'%';
+  }
+  function resetUploadUI(){ btn.disabled = false; btn.textContent = '⬆️ رفع الملفات'; }
+
+  const jobs = fileList.map(function(file, idx){
+    const ext = file.name.split('.').pop().toLowerCase();
+    const type = ext==='pdf' ? 'pdf' : 'html';
+    const mimeType = type==='pdf' ? 'application/pdf' : 'text/html';
+    return readFileAsBase64(file, function(loaded){
+      transferred[idx] = loaded;
+      updateOverallProgress();
+    }).then(function(base64){
+      return db.collection('interactiveLessons').add({
+        title: (fileList.length>1 ? (titleBase?titleBase+' — ':'')+file.name : (titleBase||file.name)),
+        week: week,
+        type: type,
+        mimeType: mimeType,
+        content: base64,
+        size: file.size,
+        uploadedAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+    });
+  });
+
+  Promise.all(jobs).then(function(){
+    resetUploadUI();
+    fill.style.width = '100%';
+    progEl.textContent = '';
+    showToast('تم رفع '+fileList.length+' ملف بنجاح! هيظهر للطلاب اللي وصلوا للأسبوع '+week+' فورًا 🎉', 'ok');
+    filesInp.value = '';
+    document.getElementById('il-title').value = '';
+    setTimeout(function(){ track.classList.remove('show'); fill.style.width='0%'; }, 1500);
+  }).catch(function(err){
+    resetUploadUI();
+    track.classList.remove('show'); fill.style.width='0%';
+    progEl.textContent = '';
+    console.error('interactive lesson upload failed', err);
+    showToast('حصل خطأ أثناء الرفع: '+(err&&err.message?err.message:'خطأ غير معروف'), 'err', 9000);
+  });
+}
+
+function deleteInteractiveLesson(id){
+  const les = interactiveLessonsCache.find(function(l){ return l.id===id; });
+  if(!les) return;
+  if(!confirm('متأكد إنك عايز تحذف "'+les.title+'"؟')) return;
+  db.collection('interactiveLessons').doc(id).delete()
+    .then(function(){ showToast('🗑️ اتحذف الدرس', 'ok'); })
+    .catch(function(err){ showToast('حصل خطأ أثناء الحذف: '+err.message, 'err'); });
+}
+
+/* ══════════════════════════════════════════
+   🤖 استوديو الذكاء الاصطناعي — اختبارات / بطاقات / خرائط ذهنية
+   بيتولّد بالذكاء الاصطناعي، الأدمن بيعاين النتيجة الأول، وبعدين
+   ينشرها في مجموعة aiContent — بتظهر للطلاب أسبوع بأسبوع
+   بنفس نظام "الشرح التفاعلي" بالظبط
+   ══════════════════════════════════════════ */
+let aiContentCache = [];
+let aiContentUnsub = null;
+let aiDraft = null; // آخر محتوى اتولّد ولسه ما اتنشرش
+
+(function fillAISubjectSelect(){
+  const sel = document.getElementById('ai-subject');
+  if(!sel) return;
+  sel.innerHTML = Object.entries(SUBJ_INFO_LITE).map(function(e){
+    return '<option value="'+e[0]+'">'+e[1].icon+' '+e[1].name+'</option>';
+  }).join('');
+})();
+
+function onAITypeChange(){
+  const type = document.getElementById('ai-type').value;
+  const label = document.getElementById('ai-size-label');
+  if(type==='quiz') label.textContent = 'حجم الاختبار';
+  else if(type==='flashcards') label.textContent = 'عدد البطاقات';
+  else label.textContent = 'مستوى تفصيل الخريطة';
+}
+
+function esc2(s){ return esc(String(s==null?'':s)); }
+
+function buildAIPrompt(type, topic, size){
+  if(type==='quiz'){
+    const counts = { short:{mcq:2,tf:1,essay:1}, medium:{mcq:4,tf:2,essay:1}, long:{mcq:7,tf:3,essay:2} }[size]||{mcq:4,tf:2,essay:1};
+    return {
+      system: 'أنت معلم مصري متخصص في صياغة أسئلة امتحانات دقيقة وواضحة لطلاب الثانوية العامة.',
+      content: 'الموضوع: '+topic+'\n\nولّد اختبار عن الموضوع ده: '+counts.mcq+' سؤال اختيار من متعدد، '+counts.tf+' سؤال صح/خطأ، و'+counts.essay+' سؤال مقالي. أرجع JSON فقط بدون أي نص إضافي ولا backticks بالشكل ده بالظبط:\n{"questions":[{"type":"mcq","q":"نص السؤال","choices":["أ","ب","ج","د"],"correct":0},{"type":"tf","q":"نص السؤال","correct":true},{"type":"essay","q":"نص السؤال","modelAnswer":"إجابة نموذجية مختصرة"}]}'
+    };
+  }
+  if(type==='flashcards'){
+    const n = { short:6, medium:10, long:16 }[size]||10;
+    return {
+      system: 'أنت مساعد تعليمي متخصص في صناعة بطاقات مراجعة فعّالة لطلاب الثانوية العامة.',
+      content: 'الموضوع: '+topic+'\n\nولّد '+n+' بطاقة مراجعة (سؤال قصير وإجابة قصيرة ومباشرة) عن الموضوع ده. أرجع JSON فقط بدون أي نص إضافي ولا backticks بالشكل ده بالظبط:\n{"cards":[{"front":"سؤال قصير","back":"إجابة قصيرة"}]}'
+    };
+  }
+  // mindmap
+  const depth = { short:'مستويين بس (فروع رئيسية وفروع فرعية)', medium:'3 مستويات', long:'3 مستويات بتفاصيل أكتر في كل فرع' }[size]||'3 مستويات';
+  return {
+    system: 'أنت معلم مصري متخصص في تبسيط المناهج الدراسية في شكل خرائط ذهنية واضحة.',
+    content: 'الموضوع: '+topic+'\n\nولّد خريطة ذهنية عن الموضوع ده بعمق '+depth+'، كل عنوان يكون قصير ومختصر (كام كلمة بس). أرجع JSON فقط بدون أي نص إضافي ولا backticks بالشكل ده بالظبط:\n{"root":{"title":"العنوان الرئيسي","children":[{"title":"فرع رئيسي","children":[{"title":"فرع فرعي","children":[]}]}]}}'
+  };
+}
+
+async function generateAIContent(){
+  const type = document.getElementById('ai-type').value;
+  const topic = document.getElementById('ai-topic').value.trim();
+  const size = document.getElementById('ai-size').value;
+  const st = document.getElementById('ai-gen-status');
+  const preview = document.getElementById('ai-preview');
+  const publishWrap = document.getElementById('ai-publish-wrap');
+  if(!topic){ showToast('اكتب موضوع الدرس الأول', 'warn'); return; }
+  const btn = document.getElementById('ai-gen-btn');
+  btn.disabled = true;
+  publishWrap.style.display = 'none';
+  preview.innerHTML = '';
+  st.innerHTML = '<div style="font-size:11.5px;color:var(--tx3)">⏳ بيولّد المحتوى...</div>';
+  try{
+    const p = buildAIPrompt(type, topic, size);
+    const txt = await claudeRequest(p.content, p.system);
+    const clean = txt.replace(/```json|```/g, '').trim();
+    const data = JSON.parse(clean);
+    aiDraft = { type: type, subject: document.getElementById('ai-subject').value, topic: topic, week: parseInt(document.getElementById('ai-week').value)||1, data: data };
+    st.innerHTML = '<div style="font-size:11.5px;color:var(--gn)">✅ اتولّد — عايِن النتيجة تحت وانشرها لو عاجبتك</div>';
+    renderAIPreview();
+    publishWrap.style.display = 'flex';
+  }catch(err){
+    console.error('AI content generation failed', err);
+    st.innerHTML = '<div style="font-size:11.5px;color:var(--rd)">❌ حصل خطأ: '+(err&&err.message?esc2(err.message):'حاول تاني')+'</div>';
+  }finally{
+    btn.disabled = false;
+  }
+}
+
+function renderAIPreview(){
+  const preview = document.getElementById('ai-preview');
+  if(!aiDraft){ preview.innerHTML=''; return; }
+  if(aiDraft.type==='quiz'){
+    const qs = aiDraft.data.questions||[];
+    preview.innerHTML = qs.map(function(q,i){
+      const meta = q.type==='mcq' ? 'اختيار من متعدد' : q.type==='tf' ? 'صح/خطأ' : 'مقالي';
+      let extra = '';
+      if(q.type==='mcq') extra = '<div style="font-size:11px;color:var(--tx3);margin-top:4px">'+(q.choices||[]).map(function(c,ci){ return (ci===q.correct?'✅ ':'• ')+esc2(c); }).join(' — ')+'</div>';
+      if(q.type==='tf') extra = '<div style="font-size:11px;color:var(--tx3);margin-top:4px">الإجابة الصح: '+(q.correct?'✅ صح':'❌ خطأ')+'</div>';
+      if(q.type==='essay') extra = '<div style="font-size:11px;color:var(--tx3);margin-top:4px">النموذجية: '+esc2(q.modelAnswer||'')+'</div>';
+      return '<div class="subj-block"><div style="font-weight:700;font-size:12.5px">'+(i+1)+'. '+esc2(q.q)+' <span style="font-size:10px;color:var(--tx3)">('+meta+')</span></div>'+extra+'</div>';
+    }).join('') || '<div class="empty">مفيش أسئلة</div>';
+  }else if(aiDraft.type==='flashcards'){
+    const cards = aiDraft.data.cards||[];
+    preview.innerHTML = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">'+cards.map(function(c){
+      return '<div class="subj-block" style="margin-bottom:0"><div style="font-weight:700;font-size:12px;color:var(--ac)">'+esc2(c.front)+'</div><div style="font-size:11.5px;color:var(--tx2);margin-top:6px">'+esc2(c.back)+'</div></div>';
+    }).join('')+'</div>';
+  }else{
+    preview.innerHTML = '<div class="subj-block">'+buildMindmapNodeHTML(aiDraft.data.root, 0)+'</div>';
+  }
+}
+
+function buildMindmapNodeHTML(node, depth){
+  if(!node) return '';
+  const icon = depth===0 ? '🧠' : depth===1 ? '▸' : '•';
+  const size = depth===0 ? '14px' : depth===1 ? '12.5px' : '11.5px';
+  const weight = depth===0 ? 800 : 600;
+  const color = depth===0 ? 'var(--ac)' : 'var(--tx)';
+  const kids = (node.children||[]).map(function(c){ return buildMindmapNodeHTML(c, depth+1); }).join('');
+  return '<div style="'+(depth>0?'border-right:2px solid var(--bd);padding-right:12px;margin-right:'+(depth*14)+'px;':'')+'margin-bottom:6px">'+
+    '<div style="font-weight:'+weight+';font-size:'+size+';color:'+color+'">'+icon+' '+esc2(node.title||'')+'</div>'+
+    (kids?'<div style="margin-top:6px">'+kids+'</div>':'')+
+  '</div>';
+}
+
+function publishAIContent(){
+  if(!aiDraft) return;
+  const btn = document.getElementById('ai-publish-wrap').querySelector('.btn-ok');
+  btn.disabled = true; btn.textContent = '...جاري النشر';
+  db.collection('aiContent').add({
+    type: aiDraft.type,
+    subject: aiDraft.subject,
+    topic: aiDraft.topic,
+    week: aiDraft.week,
+    data: aiDraft.data,
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  }).then(function(){
+    showToast('🚀 اتنشر! هيظهر للطلاب اللي وصلوا للأسبوع '+aiDraft.week, 'ok');
+    aiDraft = null;
+    document.getElementById('ai-preview').innerHTML = '';
+    document.getElementById('ai-gen-status').innerHTML = '';
+    document.getElementById('ai-publish-wrap').style.display = 'none';
+    document.getElementById('ai-topic').value = '';
+  }).catch(function(err){
+    showToast('حصل خطأ أثناء النشر: '+err.message, 'err');
+  }).finally(function(){
+    btn.disabled = false; btn.textContent = '🚀 نشر للطلاب';
+  });
+}
+
+function listenAIContent(){
+  if(aiContentUnsub) aiContentUnsub();
+  aiContentUnsub = db.collection('aiContent').onSnapshot(function(snap){
+    aiContentCache = [];
+    snap.forEach(function(doc){ aiContentCache.push(Object.assign({id:doc.id}, doc.data())); });
+    renderAIContentAdminList();
+  }, function(err){ console.error('listen aiContent failed', err); });
+}
+
+function renderAIContentAdminList(){
+  const el = document.getElementById('ai-list');
+  if(!el) return;
+  if(!aiContentCache.length){
+    el.innerHTML = '<div class="empty">لسه مفيش محتوى منشور</div>';
+    return;
+  }
+  const sorted = aiContentCache.slice().sort(function(a,b){ return (a.week||1)-(b.week||1); });
+  const typeIcon = { quiz:'📝', flashcards:'🗂️', mindmap:'🧠' };
+  el.innerHTML = sorted.map(function(it){
+    const subj = SUBJ_INFO_LITE[it.subject] || SUBJ_INFO_LITE.general;
+    return '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 6px;border-bottom:1px solid var(--bd);font-size:12px">'+
+      '<div style="min-width:0"><div style="font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+(typeIcon[it.type]||'🤖')+' '+esc(it.topic||'-')+'</div>'+
+      '<div style="font-size:10.5px;color:var(--tx3);margin-top:2px">'+subj.icon+' '+subj.name+' · أسبوع '+(it.week||1)+'</div></div>'+
+      '<button class="btn btn-no btn-mini" onclick="deleteAIContent(\''+it.id+'\')">🗑️ حذف</button>'+
+    '</div>';
+  }).join('');
+}
+
+function deleteAIContent(id){
+  const it = aiContentCache.find(function(x){ return x.id===id; });
+  if(!it) return;
+  if(!confirm('متأكد إنك عايز تحذف "'+it.topic+'"؟')) return;
+  db.collection('aiContent').doc(id).delete()
+    .then(function(){ showToast('🗑️ اتحذف المحتوى', 'ok'); })
+    .catch(function(err){ showToast('حصل خطأ أثناء الحذف: '+err.message, 'err'); });
+}
+</script>
+</body>
+</html>
